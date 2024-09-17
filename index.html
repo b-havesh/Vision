@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="shortcut icon"
+      href="./src/assets/icons8-eye-24.png"
+      type="image/x-icon"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+      integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <title>Vision</title>
+  </head>
+  <body id="page" class="antialiased font-body bg-body text-body">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      const SVGNS = "http://www.w3.org/2000/svg";
+      const EASE = 0.7;
+
+      const pointer = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      };
+
+      function updatePointer(event) {
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+      }
+
+      function createLine(leader) {
+        const line = document.createElementNS(SVGNS, "line");
+
+        const get = gsap.getProperty(line);
+        const set = gsap.quickSetter(line, "attr");
+
+        const genModifier = (prop) => {
+          const pos2 = `${prop}2`;
+
+          return () => {
+            const linePos = get(prop);
+            const leaderPos = leader(prop);
+
+            const linePosNext = linePos + (leaderPos - linePos) * EASE;
+
+            set({ [pos2]: leaderPos - linePosNext });
+
+            return linePosNext;
+          };
+        };
+
+        gsap.set(line, pointer);
+
+        gsap.to(line, {
+          x: "+=1",
+          y: "+=1",
+          repeat: -1,
+          ease: "linear",
+          modifiers: {
+            x: genModifier("x"),
+            y: genModifier("y"),
+          },
+        });
+
+        return line;
+      }
+
+      function createTrail(color, length = 10) {
+        const svg = document.createElementNS(SVGNS, "svg");
+
+        let leader = (prop) => (prop === "x" ? pointer.x : pointer.y);
+
+        for (let i = 0; i < length; i++) {
+          const line = createLine(leader);
+
+          line.style.stroke = color;
+          svg.appendChild(line);
+
+          leader = gsap.getProperty(line);
+        }
+
+        document.body.appendChild(svg);
+      }
+
+      window.addEventListener("pointerdown", updatePointer);
+      window.addEventListener("pointermove", updatePointer);
+
+      createTrail("#FF1493", 30); // Deep Pink
+      createTrail("#DA70D6", 20); // Orchid
+      createTrail("#6A0D91", 10); // Dark Orchid
+    </script>
+  </body>
+</html>
